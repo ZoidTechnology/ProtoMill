@@ -5,8 +5,6 @@ import ".."
 Page {
     id: root
 
-    property bool reverse
-
     Item {
         anchors.horizontalCenter: parent.horizontalCenter
         height: tool.height
