@@ -115,7 +115,7 @@ class Application:
                         title = "Error"
 
                         if isinstance(self._error, UserError):
-                            message = str(self._error)
+                            message = self._error.message
                         else:
                             message = "An unexpected error occurred. See the log for details."
                 else:
