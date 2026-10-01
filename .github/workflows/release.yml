@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags: [v*]
+
+permissions:
+  contents: write
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    name: Prepare release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Build KiCad symbols
+        run: python -m tools.build_symbols
+
+      - name: Build KiCad footprints
+        run: python -m tools.build_footprints
+
+      - name: Compress KiCad libraries
+        working-directory: build
+        run: zip -r ProtoMill-Libraries ProtoMill.kicad_sym ProtoMill.pretty
+
+      - name: Create draft release
+        working-directory: build
+        run: gh release create "$GITHUB_REF_NAME" "ProtoMill-Libraries.zip#KiCad libraries" --draft
+
+  build:
+    name: Build application for ${{ matrix.label }}
+    needs: release
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        include:
+          - label: macOS (Arm)
+            runner: macos-26
+            asset: ProtoMill-Arm.zip
+
+          - label: macOS (Intel)
+            runner: macos-26-intel
+            asset: ProtoMill-Intel.zip
+
+          - label: Windows
+            runner: windows-2025
+            asset: ProtoMill.exe
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies
+        run: pip install --group build
+
+      - name: Build application
+        run: python -m tools.build_application
+
+      - name: Compress application
+        if: runner.os == 'macOS'
+        working-directory: build
+        run: ditto -c -k --keepParent ProtoMill.app "${{ matrix.asset }}"
+
+      - name: Upload release asset
+        shell: bash
+        working-directory: build
+        run: gh release upload "$GITHUB_REF_NAME" "${{ matrix.asset }}#${{ matrix.label }}"

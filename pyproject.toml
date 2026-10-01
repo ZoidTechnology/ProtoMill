@@ -1,0 +1,28 @@
+[project]
+name = "protomill"
+requires-python = ">=3.14"
+
+[dependency-groups]
+application = ["kicad-python==0.8.0", "numpy==2.5.3", "pyserial==3.5", "PySide6==6.11.2"]
+development = [{include-group = "application"}, "pyright==1.1.414", "ruff==0.16.8"]
+build = [{include-group = "application"}, "Nuitka==4.2.1"]
+
+[tool.pyright]
+include = ["protomill", "tools"]
+reportMatchNotExhaustive = false
+reportUnnecessaryTypeIgnoreComment = true
+typeCheckingMode = "strict"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+nested-string-quote-style = "preferred"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+extend-select = ["ANN2"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+split-on-trailing-comma = false
